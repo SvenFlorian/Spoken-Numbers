@@ -1,6 +1,7 @@
 package se.cth.minges.spokennumbers.view;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
@@ -56,14 +57,21 @@ public class MainWindow extends JFrame implements ViewI {
 	private JComboBox documentBox;
 	public static JCheckBox countDownCheck;
 	public static JCheckBox abcCountDownCheck;
+	public static JCheckBox flashNumbersCheck;
 	private JButton startStopButton, showKeyButton;
 	private List<JTextField> answerGrid;
+	private JPanel mainPanel;
+	private String currentMainPanel;
+	private JLabel flashNumberLabel;
 	
 	private JMenuItem generateComponent;
 	private JMenuItem binaryComponent;
 	
 	private final int ROWS = 33;
 	private final int COLS = 30;
+	
+	private final String ANSWER_GRID = "Answer Grid";
+	private final String FLASH_NUMBERS = "Flash Numbers";
 
 	
 	public MainWindow(Model model, String windowName) {
@@ -120,10 +128,25 @@ public class MainWindow extends JFrame implements ViewI {
 		setLayout(new BorderLayout());
 		createMenuBar();
 		this.getContentPane().add(createMenuPanel(), BorderLayout.WEST);
-		this.getContentPane().add(createAnswerGrid(), BorderLayout.CENTER);
+		this.getContentPane().add(createMainPanel(), BorderLayout.CENTER);
+		//this.getContentPane().add(createAnswerGrid(), BorderLayout.CENTER);
 		this.pack();
 		this.setVisible(true);
 		
+	}
+	
+	public JPanel createMainPanel() {
+		this.mainPanel = new JPanel(new CardLayout());
+		this.mainPanel.add(createAnswerGrid(), ANSWER_GRID);
+		this.mainPanel.add(createFlashNumbersDisplay(), FLASH_NUMBERS);
+		this.currentMainPanel = ANSWER_GRID;
+		return this.mainPanel;
+	}
+	
+	public void switchMainPanel() {
+		CardLayout cardLayout = (CardLayout)(this.mainPanel.getLayout());
+		this.currentMainPanel = (this.currentMainPanel.equals(ANSWER_GRID)) ? FLASH_NUMBERS : ANSWER_GRID;
+		cardLayout.show(this.mainPanel, this.currentMainPanel);
 	}
 	
 	/** 
@@ -131,14 +154,20 @@ public class MainWindow extends JFrame implements ViewI {
 	 * @return the menu panel. 
 	 */
 	public JPanel createMenuPanel() {
-		JPanel panel = new JPanel(new GridLayout(2,1, 20, 0));
+		JPanel panel = new JPanel(new BorderLayout()); //(2,1, 20, 0));
 		JPanel bottom = createButtonPanel();
 		JPanel upper = createSettingsPanel(1000);
 		
 		panel.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 		
-		panel.add(upper);
-		panel.add(bottom);
+		JPanel paddingPanel = new JPanel(new BorderLayout());
+		
+		paddingPanel.setPreferredSize(new Dimension(10,10));
+		paddingPanel.setSize(10, 10);
+		
+		panel.add(upper, BorderLayout.PAGE_START);
+		panel.add(bottom, BorderLayout.LINE_START);
+		//panel.add(paddingPanel);
 		
 		return panel;
 	}
@@ -205,13 +234,17 @@ public class MainWindow extends JFrame implements ViewI {
 	}
 	
 	private void addCountDownCheck(JPanel panel) {
-		JPanel tmpPanel = new JPanel(new GridLayout(2,1,10,10));
+		JPanel tmpPanel = new JPanel(new GridLayout(3,1,10,10));
+		flashNumbersCheck = new JCheckBox("Spoken + Flash Numbers");
+		flashNumbersCheck.setSelected(false);
+		
 		countDownCheck = new JCheckBox("Countdown:   3  2  1");
 		countDownCheck.setSelected(true);
 		
 		abcCountDownCheck = new JCheckBox("Countdown:   A  B  C");
 		abcCountDownCheck.setSelected(true);
 		
+		tmpPanel.add(flashNumbersCheck);
 		tmpPanel.add(countDownCheck);
 		tmpPanel.add(abcCountDownCheck);
 		panel.add(tmpPanel);
@@ -244,6 +277,28 @@ public class MainWindow extends JFrame implements ViewI {
 	
 	public void updateComboBoxModel() {
 		this.documentBox.setModel(new DefaultComboBoxModel(getExcelDocuments()));
+	}
+	
+	/**
+	 * Creates a grid of cells and enables/disables
+	 * a certain amount of it.
+	 * @param nbrOfIntegers the number of cells to enable.
+	 * @return the answer grid.
+	 */
+	public JComponent createFlashNumbersDisplay() {
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 10));
+		Font font = new Font("Tahoma", Font.BOLD, 96);
+		this.flashNumberLabel = new JLabel("-");
+		this.flashNumberLabel.setFont(font);
+		this.flashNumberLabel.setHorizontalAlignment( SwingConstants.CENTER );
+		panel.add(this.flashNumberLabel);
+		
+		return panel;
+	}
+	
+	public void setFlashNumber(String textToFlash) {
+		this.flashNumberLabel.setText(textToFlash);
 	}
 	
 	/**
@@ -427,10 +482,23 @@ public class MainWindow extends JFrame implements ViewI {
 		//why we don't use this?
 		if (o instanceof SoundPlayer) {
 			SoundPlayer player = (SoundPlayer) o;
-			enableAnswerGrid(player.getCount());
+			int nNumbersSeen = flashNumbersCheck.isSelected() ? player.getCount() * 2 : player.getCount();
+			enableAnswerGrid(nNumbersSeen);
+			
+			if (arg != null) {
+				if (arg.equals(SoundPlayer.DONE)) {
+					// fake push stop button
+					//startStopButton.doClick();
+				}
+			}
+			//setFlashNumber(String.valueOf(player.getCount()));
 //			if (player.getCount() == model.numbers) {
 //				this.startStopButton.doClick();
 //			}
+		} else if (o instanceof Model) {
+			if (arg != null) {
+				setFlashNumber(arg.toString());
+			}
 		}
 	}
 

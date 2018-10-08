@@ -1,13 +1,18 @@
 package se.cth.minges.spokennumbers.control;
 
+import java.awt.BorderLayout;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Calendar;
 import java.util.List;
 
+import javax.swing.BorderFactory;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -16,8 +21,8 @@ import se.cth.minges.spokennumbers.core.FileWriterSupport;
 import se.cth.minges.spokennumbers.core.Model;
 import se.cth.minges.spokennumbers.core.StringConstants;
 import se.cth.minges.spokennumbers.view.GenerateNumbersDialog;
+import se.cth.minges.spokennumbers.view.MainWindow;
 import se.cth.minges.spokennumbers.view.ViewI;
-
 /**
  * Controls the events in this project.
  * 
@@ -42,8 +47,7 @@ public class Controller {
 	public void setListeners() {
 		this.view.addStartStopActionListener(getStartStopButtonListener());
 		this.view.addShowAnswerActionListener(getShowAnswerButtonListener());
-		this.view
-				.addAnswerGridFocusListener(new se.cth.minges.spokennumbers.control.FocusListener());
+		this.view.addAnswerGridFocusListener(new se.cth.minges.spokennumbers.control.FocusListener());
 		addGenerateNumbersActionListener();
 		addFocusShiftListener();
 	}
@@ -62,8 +66,34 @@ public class Controller {
 					view.setShowKeyButtonVisible(false);
 					view.clearSheet();
 					
+					if (MainWindow.flashNumbersCheck.isSelected()) {
+						view.switchMainPanel();
+					}
+					
+					MainWindow.flashNumbersCheck.setEnabled(false);
+					MainWindow.countDownCheck.setEnabled(false);
+					MainWindow.abcCountDownCheck.setEnabled(false);
+					
 					//start playback
 					model.startPlayback(view.getSelectedFile(), view.getTimeInterval());
+					
+					/*
+					JFrame newFrame = new JFrame();
+					JPanel panel = new JPanel(new GridBagLayout());
+					JLabel label = new JLabel("Hello");
+					label.setFont(label.getFont().deriveFont(64.0f));
+					panel.add(label);
+					panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+					//label.setHorizontalAlignment(JLabel.CENTER);
+					//label.setVerticalAlignment(JLabel.CENTER);
+					newFrame.getContentPane().add(panel, BorderLayout.CENTER);
+					newFrame.setTitle("TEST");
+					newFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+					newFrame.setSize(800,600);
+					newFrame.setLocationRelativeTo(null);
+					//newFrame.pack();
+					newFrame.setVisible(true);
+					*/
 				}
 
 				else if (e.getActionCommand().equals(StringConstants.STOP)) {
@@ -73,6 +103,11 @@ public class Controller {
 					
 					//update GUI
 					view.setStartStopButtonCommand(StringConstants.EVALUATE);
+					
+					if (MainWindow.flashNumbersCheck.isSelected()) {
+						view.switchMainPanel();
+					}
+					
 				}
 
 				else if (e.getActionCommand().equals(StringConstants.EVALUATE)) {
@@ -85,6 +120,10 @@ public class Controller {
 					view.setStartStopButtonCommand(StringConstants.START);
 					view.setShowKeyButtonCommand(StringConstants.SHOW_KEY);
 					view.setShowKeyButtonVisible(true);
+					
+					MainWindow.flashNumbersCheck.setEnabled(true);
+					MainWindow.countDownCheck.setEnabled(true);
+					MainWindow.abcCountDownCheck.setEnabled(true);
 					
 					//display result
 					showResultMessage();

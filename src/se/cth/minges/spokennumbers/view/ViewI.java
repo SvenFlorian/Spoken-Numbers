@@ -37,6 +37,7 @@ public interface ViewI extends Observer {
 	 * However, this seems to be sparing some trouble, so I will keep 
 	 * it that way for now. */
 	public List<JTextField> getAnswerGrid();
+	public void switchMainPanel();
 
 	
 	/* Update/alter the GUI in some way. */
@@ -50,5 +51,6 @@ public interface ViewI extends Observer {
 	public void enableComboBox(boolean enable);
 	public void setShowKeyButtonVisible(boolean visible);
 	public void enableAnswerGrid(int enabledFields);
+	public void setFlashNumber(String textToFlash);
 
 }

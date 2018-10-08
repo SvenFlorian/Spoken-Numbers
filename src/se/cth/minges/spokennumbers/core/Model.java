@@ -12,20 +12,24 @@ import jxl.write.WriteException;
 import jxl.write.biff.RowsExceededException;
 import se.cth.minges.spokennumbers.core.excel.ReadExcel;
 import se.cth.minges.spokennumbers.core.excel.WriteExcel;
+import se.cth.minges.spokennumbers.view.MainWindow;
 
 /**
  * Class representing this projects data.
  * @author Florian Minges
  */
-public class Model extends Observable {
+public class Model extends Observable implements Observer {
 	
-	private List<Integer> numbers;
+	private List<Integer> all_numbers;
+	private List<Integer> spoken_numbers;
+	private List<Integer> flash_numbers;
 	private List<Integer> user_answer;
 	private SoundPlayer soundPlayer;
 	private Thread playback_thread;
 
 	public Model() {
 		this.soundPlayer = new SoundPlayer();
+		this.soundPlayer.addObserver(this);
 	}
 	
 	/**
@@ -37,7 +41,7 @@ public class Model extends Observable {
 		readNumbersIntoMemory(fileName);
 		this.playback_thread = new Thread(new Runnable() {
 			public void run() {
-				soundPlayer.play(numbers, delay_in_ms);
+				soundPlayer.play(spoken_numbers, delay_in_ms);
 			}
 		});
 		this.playback_thread.start();
@@ -109,15 +113,45 @@ public class Model extends Observable {
 		ReadExcel excel = new ReadExcel();
 		try {
 			//possible to pass the name of a file, instead of the absolute path
-			this.numbers = fileName.contains(System.getProperty("file.separator")) ? excel.readNumbers(fileName) :
+			this.all_numbers = fileName.contains(System.getProperty("file.separator")) ? excel.readNumbers(fileName) :
 						excel.readNumbers(StringConstants.EXCEL_ROOT_DIR + fileName);
+			
+			this.spoken_numbers = this.all_numbers;
+			this.flash_numbers = this.all_numbers;
+			
+			if (MainWindow.flashNumbersCheck.isSelected()) {
+				this.spoken_numbers = new ArrayList<Integer>();
+				this.flash_numbers = new ArrayList<Integer>();
+				for (int i = 0; i < all_numbers.size(); i++) {
+					if (i % 2 == 0) {
+						this.spoken_numbers.add(this.all_numbers.get(i));
+					} else {
+						this.flash_numbers.add(this.all_numbers.get(i));
+					}
+				}
+			}
+			
 		} catch (IOException e) {
 			e.printStackTrace();
 			List<Integer> list = new ArrayList<Integer>();
 			for (int i = 0; i < 100; i++) {
 				list.add(i % 10);
 			}
-			this.numbers = list;
+			this.all_numbers = list;
+			this.spoken_numbers = this.all_numbers;
+			this.flash_numbers = this.all_numbers;
+			
+			if (MainWindow.flashNumbersCheck.isSelected()) {
+				this.spoken_numbers = new ArrayList<Integer>();
+				this.flash_numbers = new ArrayList<Integer>();
+				for (int i = 0; i < all_numbers.size(); i++) {
+					if (i % 2 == 0) {
+						this.spoken_numbers.add(this.all_numbers.get(i));
+					} else {
+						this.flash_numbers.add(this.all_numbers.get(i));
+					}
+				}
+			}
 		}
 
 	}
@@ -125,12 +159,12 @@ public class Model extends Observable {
 	/** Returns the stored generated random numbers. */
 	public List<Integer> getNumbers(String fileName) {
 		readNumbersIntoMemory(fileName);
-		return this.numbers;
+		return this.all_numbers;
 	}
 	
 	/** Returns the stored numbers. */
 	public List<Integer> getNumbers() {
-		return this.numbers;
+		return this.all_numbers;
 	}
 	
 	/** Returns the users input, if it has been saved. */
@@ -143,7 +177,7 @@ public class Model extends Observable {
 	public List<Boolean> getEvaluationSheet() {
 		List<Boolean> sheet = new ArrayList<Boolean>();
 		for (int i = 0; i < getCount(); i++) {
-			sheet.add(i, this.numbers.get(i) == this.user_answer.get(i));
+			sheet.add(i, this.all_numbers.get(i) == this.user_answer.get(i));
 		}
 		return sheet;
 	}
@@ -175,7 +209,8 @@ public class Model extends Observable {
 	
 	/** Returns the number of played sounds. */
 	public int getCount() {
-		return this.soundPlayer.getCount();
+		int count = MainWindow.flashNumbersCheck.isSelected() ? this.soundPlayer.getCount() * 2 : this.soundPlayer.getCount();
+		return count;
 	}
 	
 	/** 
@@ -205,5 +240,29 @@ public class Model extends Observable {
 	public void setView(Observer observer) {
 		this.addObserver(observer);
 		this.soundPlayer.addObserver(observer);
+	}
+	
+	@Override
+	public void update(Observable o, Object arg) {
+		//why we don't use this?
+		if (o instanceof SoundPlayer) {
+			SoundPlayer player = (SoundPlayer) o;
+			setChanged();
+			if (MainWindow.flashNumbersCheck.isSelected()) {
+				if (arg != null && arg.equals(SoundPlayer.DONE)) {
+					notifyObservers("");
+				} else if (player.getCount() > 0) {
+					notifyObservers(this.flash_numbers.get(player.getCount() - 1));
+				} else {
+					String flashyNumber = "";
+					if (arg != null) {
+						if (arg.toString().length() == 1) {
+							flashyNumber = arg.toString();
+						}
+					}
+					notifyObservers(flashyNumber);
+				}
+			}
+		}
 	}
 }

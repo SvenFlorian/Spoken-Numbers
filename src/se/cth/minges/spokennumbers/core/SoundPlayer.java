@@ -25,6 +25,8 @@ public class SoundPlayer extends Observable {
 	private Clip[] clips2 = new Clip[10];
 	private Clip clip;
 	private SoundManager manager;
+	
+	public static final String DONE = "Done";
 
 	public SoundPlayer() {
 		this.playedSounds = 0;
@@ -138,6 +140,8 @@ public class SoundPlayer extends Observable {
 			// public void run() {
 //			play(Sounds.convert(number));
 			playClip(manager.getClip(j));
+			setChanged();
+			notifyObservers(j);
 			// }
 			// });
 			// thread.start();
@@ -149,12 +153,19 @@ public class SoundPlayer extends Observable {
 		}
 		for (int j = 10; j < 13 && MainWindow.abcCountDownCheck.isSelected(); j++) {
 			playClip(manager.getClip(j));
+			String [] letters = {"A", "B", "C"};
+			setChanged();
+			notifyObservers(letters[j-10]);
 			try {
 				Thread.sleep(delay_in_ms);
 			} catch (InterruptedException ie) {
 				return; // end method
 			}
+			
 		}
+		
+		setChanged();
+		notifyObservers();
 
 		try {
 			Thread.sleep(delay_in_ms);
@@ -180,9 +191,11 @@ public class SoundPlayer extends Observable {
 			}
 		}
 
+		setChanged();
+		notifyObservers(SoundPlayer.DONE);
 	}
 
-	/** Returns the number of continuos played sounds. */
+	/** Returns the number of continuous played sounds. */
 	public int getCount() {
 		return this.playedSounds;
 	}
