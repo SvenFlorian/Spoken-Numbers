@@ -6,6 +6,10 @@ Spoken Numbers is a discipline in all memory competitions. The aim is to commit 
 
 Java Runtime Environment (JRE) 1.6 or later
 
+## Download
+
+You can download the program by clicking [here](https://github.com/SvenFlorian/Spoken-Numbers/archive/master.zip) or by clicking on the green button above and download as ZIP. 
+
 ## Features
 * Playback of up to 990 numbers in intervals between 500 and 3000 milliseconds.
 * Generate numbers into excel-files for easy printing.
