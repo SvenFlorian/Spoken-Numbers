@@ -11,8 +11,8 @@ Java Runtime Environment (JRE) 1.6 or later
 * Generate numbers into excel-files for easy printing.
 * Evaluates and highlights wrong/correct answers.
 * Can store your results in a textfile.
-* *New feature* - Generate sheets with binary numbers and practice spoken binaries.
-* *New feature* - Optional countdown before the playback starts.
+* Generate sheets with binary numbers and practice spoken binaries.
+* *New feature* - Spoken Flash Numbers (one digit spoken + one digit shown, at a time)
 
 # Running the Program
 
